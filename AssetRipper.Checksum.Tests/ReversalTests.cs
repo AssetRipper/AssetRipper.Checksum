@@ -5,7 +5,7 @@ namespace AssetRipper.Checksum.Tests;
 public partial class ReversalTests
 {
 	[GeneratedRegex("[H-Wh-w]{6}[HJLN]")]
-	private static partial Regex ReverseOutputRegex();
+	private static partial Regex ReverseOutputRegex { get; }
 
 	[Test]
 	public void TestReversalSymmetryAndRegexMatching()
@@ -14,11 +14,11 @@ public partial class ReversalTests
 		{
 			uint hash = RandomHash;
 			string reversed = Crc32Algorithm.ReverseAscii(hash);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Crc32Algorithm.HashAscii(reversed), Is.EqualTo(hash));
-				Assert.That(ReverseOutputRegex().IsMatch(reversed));
-			});
+				Assert.That(ReverseOutputRegex.IsMatch(reversed));
+			}
 		}
 	}
 
@@ -35,11 +35,11 @@ public partial class ReversalTests
 		const string prefix = "Prefix_";
 		uint hash = RandomHash;
 		string reversed = Crc32Algorithm.ReverseAscii(hash, prefix);
-		Assert.Multiple(() =>
+		using (Assert.EnterMultipleScope())
 		{
 			Assert.That(Crc32Algorithm.HashAscii(reversed), Is.EqualTo(hash));
 			Assert.That(reversed, Does.StartWith(prefix));
-		});
+		}
 	}
 
 	private static uint RandomHash => TestContext.CurrentContext.Random.NextUInt();
