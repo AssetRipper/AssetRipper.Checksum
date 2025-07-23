@@ -13,9 +13,9 @@ static partial class Crc32Algorithm
 	/// </remarks>
 	/// <param name="hash">A CRC32 checksum</param>
 	/// <returns>An Ascii string of length 7 with that <paramref name="hash"/></returns>
-	public static string ReverseAscii(uint hash)
+	public static string Reverse(uint hash)
 	{
-		return ReverseAscii(hash, default, defaultInitialMask);
+		return Reverse(hash, default, defaultInitialMask);
 	}
 
 	/// <summary>
@@ -31,10 +31,26 @@ static partial class Crc32Algorithm
 	public static string ReverseAscii(uint hash, ReadOnlySpan<char> prefix)
 	{
 		uint reverseInitialMask = HashAscii(prefix, HHHHHHH);
-		return ReverseAscii(hash, prefix, reverseInitialMask);
+		return Reverse(hash, prefix, reverseInitialMask);
 	}
 
-	private static string ReverseAscii(uint hash, ReadOnlySpan<char> prefix, uint reverseInitialMask)
+	/// <summary>
+	/// Find a conflicting UTF8 string with Gaussian Elimination
+	/// </summary>
+	/// <remarks>
+	/// The output is one-to-one and starts with <paramref name="prefix"/>. The suffix matches [H-Wh-w]{6}[HJLN] <br />
+	/// Based on <see href="https://gitlab.com/-/snippets/2369762">work</see> by <see href="https://gitlab.com/lox9973">lox9973</see> licensed under MIT.
+	/// </remarks>
+	/// <param name="hash">A CRC32 checksum</param>
+	/// <param name="prefix">A span of characters that will be prepended to the output</param>
+	/// <returns>An UTF8 string of length <paramref name="prefix"/>.Length + 7 with that <paramref name="hash"/></returns>
+	public static string ReverseUTF8(uint hash, ReadOnlySpan<char> prefix)
+	{
+		uint reverseInitialMask = HashUTF8(prefix, HHHHHHH);
+		return Reverse(hash, prefix, reverseInitialMask);
+	}
+
+	private static string Reverse(uint hash, ReadOnlySpan<char> prefix, uint reverseInitialMask)
 	{
 		uint b = hash ^ reverseInitialMask;
 

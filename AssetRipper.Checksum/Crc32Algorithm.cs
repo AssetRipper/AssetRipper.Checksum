@@ -72,6 +72,16 @@ public static partial class Crc32Algorithm
 		return result;
 	}
 
+	private static uint HashUTF8(ReadOnlySpan<char> str1, ReadOnlySpan<char> str2)
+	{
+		crc ??= new();
+		crc.Reset();
+		crc.UpdateUTF8(str1);
+		crc.UpdateUTF8(str2);
+
+		return crc.FinishHash();
+	}
+
 	public static bool MatchAscii(ReadOnlySpan<char> data, uint hash)
 	{
 		return HashAscii(data) == hash;
@@ -88,6 +98,34 @@ public static partial class Crc32Algorithm
 		{
 			byte b = (byte)data[i];
 			@this.Append(new ReadOnlySpan<byte>(in b));
+		}
+	}
+
+	private static void UpdateUTF8(this Crc32 @this, ReadOnlySpan<char> data)
+	{
+		int count = (int)(uint)Encoding.UTF8.GetByteCount(data);
+
+		byte[]? rentedArray;
+		scoped Span<byte> buffer;
+		if (count > 1024)
+		{
+			rentedArray = ArrayPool<byte>.Shared.Rent(count);
+			buffer = new Span<byte>(rentedArray, 0, count);
+		}
+		else
+		{
+			rentedArray = null;
+			buffer = stackalloc byte[count];
+		}
+
+		int encoded = Encoding.UTF8.GetBytes(data, buffer);
+		Debug.Assert(encoded == count);
+
+		@this.Append(buffer);
+
+		if (rentedArray is not null)
+		{
+			ArrayPool<byte>.Shared.Return(rentedArray);
 		}
 	}
 

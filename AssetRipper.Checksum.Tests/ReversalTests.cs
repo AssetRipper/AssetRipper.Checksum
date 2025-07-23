@@ -13,7 +13,7 @@ public partial class ReversalTests
 		for (int i = 0; i < 50; i++)
 		{
 			uint hash = RandomHash;
-			string reversed = Crc32Algorithm.ReverseAscii(hash);
+			string reversed = Crc32Algorithm.Reverse(hash);
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Crc32Algorithm.HashAscii(reversed), Is.EqualTo(hash));
@@ -25,20 +25,34 @@ public partial class ReversalTests
 	[Test]
 	public void ReversalLengthIsSeven()
 	{
-		string reversed = Crc32Algorithm.ReverseAscii(RandomHash);
+		string reversed = Crc32Algorithm.Reverse(RandomHash);
 		Assert.That(reversed, Has.Length.EqualTo(7));
 	}
 
-	[Test]
-	public void PrefixedReversal()
+	[TestCase("Prefix_")]
+	public void PrefixedReversal_Ascii(string prefix)
 	{
-		const string prefix = "Prefix_";
 		uint hash = RandomHash;
 		string reversed = Crc32Algorithm.ReverseAscii(hash, prefix);
 		using (Assert.EnterMultipleScope())
 		{
 			Assert.That(Crc32Algorithm.HashAscii(reversed), Is.EqualTo(hash));
 			Assert.That(reversed, Does.StartWith(prefix));
+			Assert.That(reversed, Has.Length.EqualTo(7 + prefix.Length));
+		}
+	}
+
+	[TestCase("Prefix_")]
+	[TestCase("\u60A8\u597D", Description = "Hello in Chinese")]
+	public void PrefixedReversal_UTF8(string prefix)
+	{
+		uint hash = RandomHash;
+		string reversed = Crc32Algorithm.ReverseUTF8(hash, prefix);
+		using (Assert.EnterMultipleScope())
+		{
+			Assert.That(Crc32Algorithm.HashUTF8(reversed), Is.EqualTo(hash));
+			Assert.That(reversed, Does.StartWith(prefix));
+			Assert.That(reversed, Has.Length.EqualTo(7 + prefix.Length));
 		}
 	}
 
